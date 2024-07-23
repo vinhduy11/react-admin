@@ -1,21 +1,49 @@
-import { Box, Paper, TextField } from "@mui/material";
-import { useState } from "react";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Box,
+  IconButton,
+  InputAdornment,
+  Paper,
+  TextField,
+} from "@mui/material";
+import React from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import * as yup from "yup";
 import login from "../../assets/img/login.png";
 import CustomButton from "../../components/Button";
 import LogoImage from "../../components/Image/LogoImage";
+interface IFormInput {
+  username: string;
+  password: string;
+}
+
+const schema = yup
+  .object({
+    username: yup.string().required("Username is required!"),
+    password: yup.string().required("Password is required!"),
+  })
+  .required();
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
+  const [showPassword, setShowPassword] = React.useState(false);
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    // Handle login logic here
-    console.log("Username:", username);
-    console.log("Password:", password);
+  const onSubmit: SubmitHandler<IFormInput> = (data) => {
     window.location.href = "/admin/dashboard";
   };
-
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const handleMouseDownPassword = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault();
+  };
   return (
     <Paper elevation={6} sx={{ p: 4, borderRadius: 2 }}>
       <Box
@@ -39,30 +67,43 @@ const LoginPage = () => {
         >
           <LogoImage src={login} />
         </Box>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 1 }}>
           <TextField
+            error={errors.username?.message !== undefined}
+            helperText={errors.username?.message}
             margin="normal"
-            required
             fullWidth
             id="username"
             label="Username"
-            name="username"
             autoComplete="username"
             autoFocus
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            {...register("username")}
           />
+
           <TextField
+            error={errors.password?.message !== undefined}
+            helperText={errors.password?.message}
             margin="normal"
-            required
             fullWidth
-            name="password"
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             id="password"
             autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            {...register("password")}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleClickShowPassword}
+                    onMouseDown={handleMouseDownPassword}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <CustomButton
             type="submit"
